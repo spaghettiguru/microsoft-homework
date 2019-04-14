@@ -1,4 +1,5 @@
 (function() {
+const dataAPI = 'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=MSFT&interval=5min&apikey=demo';
 const defaultThreshold = 100000;
 
 const chart = initChart('chart');
@@ -103,6 +104,29 @@ function setThreshold(chart, thresholdValue) {
             }
         }
     });
+}
+
+function fetchData(url) {
+    let response;
+    try {
+        response = await fetch(url);
+        if (!response.ok) {
+            throw new Error('Server error.')
+        }
+    } catch (error) {
+        response = null;
+    }
+
+    let chartData;
+    if (response) {
+        try {
+            chartData = await response.json();
+        } catch(error) {
+            chartData = null;
+        }
+    }
+    
+    return chartData
 }
 
 })();
