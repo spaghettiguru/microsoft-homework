@@ -106,7 +106,7 @@ function setThreshold(chart, thresholdValue) {
     });
 }
 
-function fetchData(url) {
+async function fetchData(url) {
     let response;
     try {
         response = await fetch(url);
