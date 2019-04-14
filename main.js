@@ -8,7 +8,7 @@ thresholdInput.addEventListener('input', (e) => {
         yAxis: {
             plotLines: [{
                 color: 'gray', // Color value
-                dashStyle: 'longdashdot', // Style of the plot line. Default to solid
+                dashStyle: 'LongDash', // Style of the plot line. Default to solid
                 value: newThreshold, // Value of where the line will appear
                 width: 3, // Width of the line 
                 zIndex: 1
@@ -46,7 +46,7 @@ const chart = Highcharts.chart('chart', {
         },
         plotLines: [{
             color: 'gray', // Color value
-            dashStyle: 'longdashdot', // Style of the plot line. Default to solid
+            dashStyle: 'LongDash', // Style of the plot line. Default to solid
             value: defaultThreshold, // Value of where the line will appear
             width: 3, // Width of the line 
             zIndex: 1   
