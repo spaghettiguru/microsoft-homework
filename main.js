@@ -2,29 +2,38 @@
 const dataAPI = 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=MSFT&apikey=RZAKLTBRRL1GTCLH';
 
 const chartData = transformDataToSeries(await fetchData(dataAPI));
-const defaultThreshold = Math.round(chartData.reduce((sum, point) => {return sum+point.y}, 0)/chartData.length);
+const numDataPoints = chartData.length;
+const defaultThreshold = Math.round(chartData.reduce((sum, point) => {return sum+point[1]}, 0)/chartData.length);
 const chart = initChart('chart');
 
 const thresholdInput = document.getElementById('thresholdInput');
 thresholdInput.value = defaultThreshold;
 thresholdInput.addEventListener('input', (e) => {
-    setThreshold(chart, e.target.value);
+    setThreshold(chart, Number(e.target.value));
+});
+
+const numDataPointsInput = document.getElementById('numDataPointsInput');
+numDataPointsInput.value = numDataPoints;
+numDataPointsInput.min = 1;
+numDataPointsInput.max = chartData.length;
+numDataPointsInput.addEventListener('input', (e) => {
+    setNumberOfDataPoints(chart, Number(e.target.value));
 });
 
 function initChart(containerID) {
     return Highcharts.chart(containerID, {
 
         title: {
-            text: 'Solar Employment Growth by Sector, 2010-2016'
+            text: 'Daily stock price changes for Microsoft (MSFT)'
         },
     
         subtitle: {
-            text: 'Source: thesolarfoundation.com'
+            text: 'Source: www.alphavantage.co'
         },
     
         yAxis: {
             title: {
-                text: 'Number of Employees'
+                text: 'Price'
             },
             plotLines: [{
                 color: 'gray', // Color value
@@ -66,8 +75,9 @@ function initChart(containerID) {
         },
     
         series: [{
-            name: 'Stock prices',
-            data: chartData
+            id: 'stock-prices',
+            name: 'Close prices',
+            data: numDataPoints < chartData.length ? chartData.slice(-numDataPoints) : chartData.slice()
         }],
     
         responsive: {
@@ -115,6 +125,11 @@ function setThreshold(chart, thresholdValue) {
     });
 }
 
+function setNumberOfDataPoints(chart, numDataPoints) {
+    const series = chart.get('stock-prices');
+    series.setData(chartData.slice(-numDataPoints));
+}
+
 async function fetchData(url) {
     let response;
     try {
@@ -142,14 +157,13 @@ function transformDataToSeries(data) {
     const dataMap = data["Time Series (Daily)"];
     const series = [];
     for (let xValue in dataMap) {
-        const dateMillis = Date.parse(xValue);
-        series.push({
-            x: Date.parse(xValue), 
-            y: Number(dataMap[xValue]["5. volume"])
-        });
+        series.push([
+            Date.parse(xValue), 
+            Number(dataMap[xValue]["4. close"])
+        ]);
     }
 
-    return series
+    return series.sort((a,b) => a[0]-b[0])
 }
 
 })();
