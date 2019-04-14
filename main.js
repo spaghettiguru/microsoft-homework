@@ -1,7 +1,8 @@
-(function() {
-const dataAPI = 'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=MSFT&interval=5min&apikey=demo';
-const defaultThreshold = 100000;
+(async function() {
+const dataAPI = 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=MSFT&apikey=RZAKLTBRRL1GTCLH';
 
+const chartData = transformDataToSeries(await fetchData(dataAPI));
+const defaultThreshold = Math.round(chartData.reduce((sum, point) => {return sum+point.y}, 0)/chartData.length);
 const chart = initChart('chart');
 
 const thresholdInput = document.getElementById('thresholdInput');
@@ -33,6 +34,13 @@ function initChart(containerID) {
                 zIndex: 1   
               }]
         },
+        xAxis: {
+            labels: {
+                formatter: function() {
+                    return new Date(this.value).toDateString()
+                }
+            }
+        },
         legend: {
             layout: 'vertical',
             align: 'right',
@@ -44,7 +52,8 @@ function initChart(containerID) {
                 label: {
                     connectorAllowed: false
                 },
-                pointStart: 2010,
+                //pointStart: new Date('2019-04-12 16:00:00'),
+                //pointInterval: 5*60*1000, // 5 minutes
                 zones: [
                     {
                         value: defaultThreshold,
@@ -57,8 +66,8 @@ function initChart(containerID) {
         },
     
         series: [{
-            name: 'Installation',
-            data: [43934, 52503, 57177, 69658, 97031, 119931, 137133, 154175]
+            name: 'Stock prices',
+            data: chartData
         }],
     
         responsive: {
@@ -127,6 +136,20 @@ async function fetchData(url) {
     }
     
     return chartData
+}
+
+function transformDataToSeries(data) {
+    const dataMap = data["Time Series (Daily)"];
+    const series = [];
+    for (let xValue in dataMap) {
+        const dateMillis = Date.parse(xValue);
+        series.push({
+            x: Date.parse(xValue), 
+            y: Number(dataMap[xValue]["5. volume"])
+        });
+    }
+
+    return series
 }
 
 })();
