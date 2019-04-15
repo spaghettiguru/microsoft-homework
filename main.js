@@ -47,9 +47,12 @@ chartSeriesCopy[0].data = chartSeries[0].data.slice(numDataPoints < chartSeries[
 setChartData(chart, chartSeriesCopy);
 setThreshold(chart, defaultThreshold);
 
+const yAxisExtremes = chart.yAxis[0].getExtremes();
 
 /* initialize DOM values */
 thresholdInput.value = defaultThreshold;
+thresholdInput.min = Math.round(yAxisExtremes.min);
+thresholdInput.max = Math.round(yAxisExtremes.max);
 numDataPointsInput.value = numDataPoints;
 numDataPointsInput.min = 1;
 numDataPointsInput.max = chartSeries[0].data.length;
