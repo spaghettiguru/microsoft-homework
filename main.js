@@ -17,7 +17,7 @@ try {
 const chartSeries = transformDataToSeries(apiResponse);
 const numDataPoints = chartSeries[0].data.length;
 const defaultThreshold = Math.round(chartSeries[0].data.reduce(
-    (sum, point) => {return sum+point[1]}
+    (sum, point) => {return sum+point.y}
     , 0) / chartSeries[0].data.length);
 
 // copy series, so that we keep the original data points
@@ -58,12 +58,6 @@ function initChart(containerID) {
 
         lang: {
             noData: ''
-        },
-
-        tooltip: {
-            // formatter: () => {
-            //     return new Date(this.x).toDateString()
-            // }
         },
     
         yAxis: {
@@ -192,19 +186,20 @@ function transformDataToSeries(data) {
     const dataMap = data["Time Series (Daily)"];
     const series = [{
         id: 'close',
-        name: 'Close prices',
+        name: 'Close price',
         data: []
     }];
 
     for (let xValue in dataMap) {
-        series[0].data.push([
-            Date.parse(xValue), 
-            Number(dataMap[xValue]["4. close"])
-        ]);
+        series[0].data.push({
+            x: Date.parse(xValue), 
+            y: Number(dataMap[xValue]["4. close"]),
+            name: new Date(xValue).toDateString()
+        });
     }
 
     // Highcharts requires data points to be sorted by X values
-    series[0].data.sort((a,b) => a[0]-b[0])
+    series[0].data.sort((a,b) => a.x - b.x)
 
     return series
 }
