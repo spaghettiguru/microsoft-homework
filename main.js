@@ -47,13 +47,15 @@ chartSeriesCopy[0].data = chartSeries[0].data.slice(numDataPoints < chartSeries[
 setChartData(chart, chartSeriesCopy);
 setThreshold(chart, defaultThreshold);
 
-thresholdInput.value = defaultThreshold;
 
+/* initialize DOM values */
+thresholdInput.value = defaultThreshold;
 numDataPointsInput.value = numDataPoints;
 numDataPointsInput.min = 1;
 numDataPointsInput.max = chartSeries[0].data.length;
-
 maxDataPointsLabel.textContent = numDataPointsInput.max;
+
+
 
 function initChart(containerID) {
     return Highcharts.chart(containerID, {
