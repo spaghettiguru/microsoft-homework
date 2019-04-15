@@ -9,9 +9,15 @@ let apiResponse;
 try {
     apiResponse = await fetchData(dataAPI);
 } catch(error) {
+
+    // strange specifics of the Highcharts library:
+    // hide no data message first - then show custom message,
+    // otherwise the custom message is not shown.
     chart.hideNoData();
     chart.showNoData(error.message);
     return;
+} finally {
+    chart.hideLoading();
 }
 
 const chartSeries = transformDataToSeries(apiResponse);
@@ -24,7 +30,6 @@ const defaultThreshold = Math.round(chartSeries[0].data.reduce(
 const chartSeriesCopy = chartSeries.map(serie => Object.assign({}, serie));
 chartSeriesCopy[0].data = chartSeries[0].data.slice(numDataPoints < chartSeries[0].data.length ? -numDataPoints : 0);
 
-chart.hideLoading();
 setChartData(chart, chartSeriesCopy);
 setThreshold(chart, defaultThreshold);
 
