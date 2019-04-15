@@ -59,6 +59,12 @@ function initChart(containerID) {
         lang: {
             noData: ''
         },
+
+        tooltip: {
+            // formatter: () => {
+            //     return new Date(this.x).toDateString()
+            // }
+        },
     
         yAxis: {
             title: {
