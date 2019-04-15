@@ -1,10 +1,32 @@
 (async function() {
 const dataAPI = 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=MSFT&apikey=RZAKLTBRRL1GTCLH';
 
-const chartData = transformDataToSeries(await fetchData(dataAPI));
-const numDataPoints = chartData.length;
-const defaultThreshold = Math.round(chartData.reduce((sum, point) => {return sum+point[1]}, 0)/chartData.length);
+
 const chart = initChart('chart');
+chart.showLoading();
+
+let apiResponse;
+try {
+    apiResponse = await fetchData(dataAPI);
+} catch(error) {
+    chart.hideNoData();
+    chart.showNoData(error.message);
+    return;
+}
+
+const chartSeries = transformDataToSeries(apiResponse);
+const numDataPoints = chartSeries[0].data.length;
+const defaultThreshold = Math.round(chartSeries[0].data.reduce(
+    (sum, point) => {return sum+point[1]}
+    , 0) / chartSeries[0].data.length);
+
+// copy series, so that we keep the original data points
+const chartSeriesCopy = chartSeries.map(serie => Object.assign({}, serie));
+chartSeriesCopy[0].data = chartSeries[0].data.slice(numDataPoints < chartSeries[0].data.length ? -numDataPoints : 0);
+
+chart.hideLoading();
+setChartData(chart, chartSeriesCopy);
+setThreshold(chart, defaultThreshold);
 
 const thresholdInput = document.getElementById('thresholdInput');
 thresholdInput.value = defaultThreshold;
@@ -15,7 +37,7 @@ thresholdInput.addEventListener('input', (e) => {
 const numDataPointsInput = document.getElementById('numDataPointsInput');
 numDataPointsInput.value = numDataPoints;
 numDataPointsInput.min = 1;
-numDataPointsInput.max = chartData.length;
+numDataPointsInput.max = chartSeries[0].data.length;
 numDataPointsInput.addEventListener('input', (e) => {
     setNumberOfDataPoints(chart, Number(e.target.value));
 });
@@ -30,16 +52,20 @@ function initChart(containerID) {
         subtitle: {
             text: 'Source: www.alphavantage.co'
         },
+
+        lang: {
+            noData: ''
+        },
     
         yAxis: {
             title: {
                 text: 'Price'
             },
             plotLines: [{
-                color: 'gray', // Color value
-                dashStyle: 'LongDash', // Style of the plot line. Default to solid
-                value: defaultThreshold, // Value of where the line will appear
-                width: 3, // Width of the line 
+                color: 'gray',
+                dashStyle: 'LongDash',
+                value: 0,
+                width: 3,
                 zIndex: 1   
               }]
         },
@@ -61,11 +87,9 @@ function initChart(containerID) {
                 label: {
                     connectorAllowed: false
                 },
-                //pointStart: new Date('2019-04-12 16:00:00'),
-                //pointInterval: 5*60*1000, // 5 minutes
                 zones: [
                     {
-                        value: defaultThreshold,
+                        value: 0,
                         color: 'rgb(124, 181, 236)'
                     },
                     {
@@ -74,11 +98,7 @@ function initChart(containerID) {
             }
         },
     
-        series: [{
-            id: 'stock-prices',
-            name: 'Close prices',
-            data: numDataPoints < chartData.length ? chartData.slice(-numDataPoints) : chartData.slice()
-        }],
+        series: [],
     
         responsive: {
             rules: [{
@@ -98,14 +118,18 @@ function initChart(containerID) {
     })
 }
 
+function setChartData(chart, series) {
+    series.forEach(serie => chart.addSeries(serie));
+}
+
 function setThreshold(chart, thresholdValue) {
     chart.update({
         yAxis: {
             plotLines: [{
-                color: 'gray', // Color value
-                dashStyle: 'LongDash', // Style of the plot line. Default to solid
-                value: thresholdValue, // Value of where the line will appear
-                width: 3, // Width of the line 
+                color: 'gray',
+                dashStyle: 'LongDash',
+                value: thresholdValue,
+                width: 3, 
                 zIndex: 1
             }]
         },
@@ -126,8 +150,8 @@ function setThreshold(chart, thresholdValue) {
 }
 
 function setNumberOfDataPoints(chart, numDataPoints) {
-    const series = chart.get('stock-prices');
-    series.setData(chartData.slice(-numDataPoints));
+    const series = chart.series[0];
+    series.setData(chartSeries[0].data.slice(-numDataPoints));
 }
 
 async function fetchData(url) {
@@ -138,16 +162,18 @@ async function fetchData(url) {
             throw new Error('Server error.')
         }
     } catch (error) {
-        response = null;
+        const errorMessage = 'Failed to get data from server';
+        console.error(errorMessage + ': ', error);
+        throw new Error(errorMessage);
     }
 
     let chartData;
-    if (response) {
-        try {
-            chartData = await response.json();
-        } catch(error) {
-            chartData = null;
-        }
+    try {
+        chartData = await response.json();
+    } catch(error) {
+        const errorMessage = 'Failed to parse server response';
+        console.error(errorMessage + ': ', error);
+        throw new Error(errorMessage)
     }
     
     return chartData
@@ -155,16 +181,23 @@ async function fetchData(url) {
 
 function transformDataToSeries(data) {
     const dataMap = data["Time Series (Daily)"];
-    const series = [];
+    const series = [{
+        id: 'close',
+        name: 'Close prices',
+        data: []
+    }];
+
     for (let xValue in dataMap) {
-        series.push([
+        series[0].data.push([
             Date.parse(xValue), 
             Number(dataMap[xValue]["4. close"])
         ]);
     }
 
     // Highcharts requires data points to be sorted by X values
-    return series.sort((a,b) => a[0]-b[0])
+    series[0].data.sort((a,b) => a[0]-b[0])
+
+    return series
 }
 
 })();
