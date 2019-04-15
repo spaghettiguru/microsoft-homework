@@ -9,18 +9,18 @@
         <script src="https://code.highcharts.com/modules/no-data-to-display.js"></script>
     </head>
     <body>
-        <main class="app-container container-fluid">
-            <form class="toolbar form-inline row">
-                <div class="form-group col-3">
-                    <label for="thresholdInput">Threshold: </label>
+        <main class="app-container">
+            <form class="toolbar form-inline">
+                <div class="form-group threshold-control">
+                    <label class="mr-2" for="thresholdInput">Threshold: </label>
                     <input type="number" id="thresholdInput" class="form-control">
                 </div>
-                <div class="form-group col-5 row">
-                    <label for="numDataPointsInput" class="col">Number of data points: </label>
-                    <div class="col">
-                        <span>1</span>
+                <div class="form-group">
+                    <label class="mr-2" for="numDataPointsInput">Number of data points: </label>
+                    <div class="data-points-range">
+                        <span class="from-to">1</span>
                         <input type="range" id="numDataPointsInput" class="form-control-range">
-                        <span id="maxDataPoints"></span>
+                        <span class="from-to" id="maxDataPoints"></span>
                     </div>
                 </div>
             </form>

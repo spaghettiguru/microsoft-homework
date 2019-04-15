@@ -1,9 +1,24 @@
-.app-container {
-
-}
-
 .toolbar {
     background: lightblue;
     margin-bottom: 20px;
     box-shadow: 0 0 5px 0 rgba(0,0,0,.5);
+    padding: 15px;
+}
+
+.threshold-control {
+    margin-right: 25px;
+}
+
+.chart {
+    margin: 0 15px;
+}
+
+.data-points-range {
+    display: flex;
+    width: 250px;
+}
+
+.from-to {
+    font-size: 12px;
+    margin: 0 5px;
 }
