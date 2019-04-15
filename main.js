@@ -42,6 +42,9 @@ numDataPointsInput.addEventListener('input', (e) => {
     setNumberOfDataPoints(chart, Number(e.target.value));
 });
 
+const maxDataPointsLabel = document.getElementById('maxDataPoints');
+maxDataPointsLabel.textContent = numDataPointsInput.max;
+
 function initChart(containerID) {
     return Highcharts.chart(containerID, {
 
