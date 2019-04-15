@@ -163,6 +163,7 @@ function transformDataToSeries(data) {
         ]);
     }
 
+    // Highcharts requires data points to be sorted by X values
     return series.sort((a,b) => a[0]-b[0])
 }
 
