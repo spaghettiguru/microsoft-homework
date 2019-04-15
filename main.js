@@ -1,6 +1,18 @@
 (async function() {
 const dataAPI = 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=MSFT&apikey=RZAKLTBRRL1GTCLH';
 
+/* find DOM elements and set up event listeners */
+const thresholdInput = document.getElementById('thresholdInput');
+thresholdInput.addEventListener('input', (e) => {
+    setThreshold(chart, Number(e.target.value));
+});
+const numDataPointsInput = document.getElementById('numDataPointsInput');
+numDataPointsInput.addEventListener('input', (e) => {
+    setNumberOfDataPoints(chart, Number(e.target.value));
+});
+const maxDataPointsLabel = document.getElementById('maxDataPoints');
+
+
 
 const chart = initChart('chart');
 chart.showLoading();
@@ -22,32 +34,25 @@ try {
 
 const chartSeries = transformDataToSeries(apiResponse);
 const numDataPoints = chartSeries[0].data.length;
+
 const defaultThreshold = Math.round(chartSeries[0].data.reduce(
     (sum, point) => {return sum+point.y}
     , 0) / chartSeries[0].data.length);
 
-// copy series, so that we keep the original data points
+// copy series, so that we keep the original data points in case
+// user will want to increase the number of points after he/she decreased it
 const chartSeriesCopy = chartSeries.map(serie => Object.assign({}, serie));
 chartSeriesCopy[0].data = chartSeries[0].data.slice(numDataPoints < chartSeries[0].data.length ? -numDataPoints : 0);
 
 setChartData(chart, chartSeriesCopy);
 setThreshold(chart, defaultThreshold);
 
-const thresholdInput = document.getElementById('thresholdInput');
 thresholdInput.value = defaultThreshold;
-thresholdInput.addEventListener('input', (e) => {
-    setThreshold(chart, Number(e.target.value));
-});
 
-const numDataPointsInput = document.getElementById('numDataPointsInput');
 numDataPointsInput.value = numDataPoints;
 numDataPointsInput.min = 1;
 numDataPointsInput.max = chartSeries[0].data.length;
-numDataPointsInput.addEventListener('input', (e) => {
-    setNumberOfDataPoints(chart, Number(e.target.value));
-});
 
-const maxDataPointsLabel = document.getElementById('maxDataPoints');
 maxDataPointsLabel.textContent = numDataPointsInput.max;
 
 function initChart(containerID) {
@@ -167,12 +172,15 @@ async function fetchData(url) {
     try {
         response = await fetch(url);
         if (!response.ok) {
+
+            // since fetch only rejects in case of network errors
+            // we have to throw an error ourselves in case response status is not OK
             throw new Error('Server error.')
         }
     } catch (error) {
         const errorMessage = 'Failed to get data from server';
         console.error(errorMessage + ': ', error);
-        throw new Error(errorMessage);
+        throw new Error(errorMessage)
     }
 
     let chartData;
@@ -195,16 +203,16 @@ function transformDataToSeries(data) {
         data: []
     }];
 
-    for (let xValue in dataMap) {
+    for (let dateStr in dataMap) {
         series[0].data.push({
-            x: Date.parse(xValue), 
-            y: Number(dataMap[xValue]["4. close"]),
-            name: new Date(xValue).toDateString()
+            x: Date.parse(dateStr), 
+            y: Number(dataMap[dateStr]["4. close"]),
+            name: new Date(dateStr).toDateString()
         });
     }
 
-    // Highcharts requires data points to be sorted by X values
-    series[0].data.sort((a,b) => a.x - b.x)
+    // Highcharts requires series data points to be sorted by X values
+    series[0].data.sort((a, b) => a.x - b.x)
 
     return series
 }
